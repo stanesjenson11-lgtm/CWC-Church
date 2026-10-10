@@ -1,0 +1,13 @@
+# dependencies and build output
+node_modules/
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+
+# local tool caches and scratch previews
+.impeccable/
+source/_*
+
+# env
+.env*
