@@ -125,11 +125,12 @@ export default function HomeStory({ children }: { children: React.ReactNode }) {
           .from('.masthead', { autoAlpha: 0, y: -16, duration: 0.8 }, 0)
           .from('.book-tilt', { y: 200, autoAlpha: 0, duration: 2, ease: 'power2.out' }, 0)
           .from('#book .contours', { autoAlpha: 0, duration: 1.6 }, 0.2)
+          // The intro moves the children; the scroll below moves their containers. Never the same element,
+          // or the scroll records the pre-intro (hidden) state and restores it on the way back up.
           .from('.identity .eyebrow', { autoAlpha: 0, duration: 0.6 }, 0.18)
           .add(words(one('.hero-title')).play(), 0.18)
-          .from('.meta li', { autoAlpha: 0, y: 12, stagger: 0.13, duration: 0.7 }, 0.44)
-          .from('.panels', { autoAlpha: 0, y: 20, duration: 1 }, 0.9)
-          .from('.hero-foot', { autoAlpha: 0, y: 20, duration: 1 }, 1.5);
+          .from('.panels > *', { autoAlpha: 0, y: 20, stagger: 0.12, duration: 1 }, 0.9)
+          .from('.hero-foot > *', { autoAlpha: 0, y: 20, stagger: 0.08, duration: 1 }, 1.5);
 
         // The book leans toward the cursor while the hero is at rest.
         let tiltOn = true;
@@ -157,7 +158,7 @@ export default function HomeStory({ children }: { children: React.ReactNode }) {
               },
             },
           })
-          .to('.identity > *', { y: -60, autoAlpha: 0, stagger: 0.01, duration: 0.07 }, 0)
+          .to('.identity', { y: -60, autoAlpha: 0, duration: 0.07 }, 0)
           .to('.panels', { x: 80, autoAlpha: 0, duration: 0.07 }, 0)
           .to('.hero-foot', { y: 40, autoAlpha: 0, duration: 0.05 }, 0)
           .to(book, { rotationX: 48, rotationZ: -12, scale: 1.06, duration: 0.22, ease: 'power1.inOut' }, 0.04)
@@ -173,7 +174,7 @@ export default function HomeStory({ children }: { children: React.ReactNode }) {
           .set('.page-layer', { autoAlpha: 1 }, HANDOFF)
           .to(cam, { t: 1, duration: 0.2, ease: 'power2.inOut', onUpdate: applyCamera }, HANDOFF)
           .fromTo('.scene', { filter: 'blur(0px)' }, { filter: 'blur(5px)', duration: 0.2, ease: 'power2.in' }, HANDOFF)
-          .to('#book .contours', { autoAlpha: 0, duration: 0.1 }, HANDOFF)
+          .fromTo('#book .contours', { autoAlpha: 1 }, { autoAlpha: 0, duration: 0.1, immediateRender: false }, HANDOFF) // the intro fades these in too
           .to(hl, { p: 1, duration: 0.08, onUpdate: paintBars }, 0.87)
           .fromTo('.page-caption', { autoAlpha: 0, y: 20 }, { autoAlpha: 1, y: 0, duration: 0.05 }, 0.9)
           // Everything but the verse falls back, so the next scene reads as the same words, closer.
