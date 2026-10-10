@@ -131,7 +131,9 @@ a:hover .swap-row + .swap-row span { transform: none; }
 }
 .plate-fill img { width: 100%; height: 110%; object-fit: cover; }
 .plate:hover .plate-fill { inset: 4%; }
-.plate-line { position: absolute; inset: 0; width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-opacity: 0.3; stroke-width: 1; vector-effect: non-scaling-stroke; pointer-events: none; }
+.plate-line { position: absolute; inset: 0; width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-opacity: 0.3; pointer-events: none; }
+/* vector-effect is not inherited: on the svg it did nothing, and a 1-unit stroke in a 0–1 viewBox washed the whole photo grey */
+.plate-line path { stroke-width: 1; vector-effect: non-scaling-stroke; }
 
 /* ---------- 0 · loading veil ---------- */
 .veil {
@@ -255,8 +257,9 @@ main { position: relative; z-index: var(--z-section); }
   display: grid;
   place-items: center;
   perspective: 1800px;
-  transform-origin: calc(50% + var(--bw) * 0.34) calc(50% - var(--bh) * 0.3);
 }
+/* One camera over the 3D book and its flat twin: zooming this moves both, so they never come apart. */
+.camera { position: absolute; inset: 0; transform-origin: 0 0; }
 .book-tilt, .book { transform-style: preserve-3d; }
 .book { position: relative; width: var(--bw); height: var(--bh); }
 .face { position: absolute; }
@@ -282,9 +285,9 @@ main { position: relative; z-index: var(--z-section); }
 .edge-top, .edge-bottom { left: 0; width: calc(100% - 3px); height: var(--bd); background: var(--page-edge); box-shadow: inset 0 0 0 1px oklch(0.82 0 0); }
 .edge-top { top: calc(var(--bd) / -2 + 3px); transform: rotateX(90deg); }
 .edge-bottom { top: calc(100% - var(--bd) / 2 - 3px); transform: rotateX(-90deg); }
-.pageblock { inset: 3px 3px 3px 0; background: var(--page); overflow: hidden; transform: translateZ(calc(var(--bd) / 2 - 2px)); }
+.pageblock { inset: 0.6% 1% 0.6% 0; background: var(--page); overflow: hidden; transform: translateZ(calc(var(--bd) / 2 - 2px)); }
 .cover, .leaf { position: absolute; inset: 0; transform-origin: left center; transform-style: preserve-3d; }
-.leaf { inset: 3px 3px 3px 0; }
+.leaf { inset: 0.6% 1% 0.6% 0; }
 .cover-front, .cover-back, .leaf-front, .leaf-back { position: absolute; inset: 0; backface-visibility: hidden; }
 .cover-back, .leaf-back { transform: rotateY(180deg); }
 .cover-front {
@@ -311,18 +314,28 @@ main { position: relative; z-index: var(--z-section); }
 .leaf-front, .leaf-back { background: var(--page); box-shadow: inset 1px 0 0 oklch(0.85 0 0); }
 .ribbon {
   position: absolute;
-  left: 92.5%;
+  left: 2.5%; /* in the gutter: the right page's inner edge, beside the spine */
   top: 0;
-  width: calc(var(--bw) * 0.035);
+  width: 3.5%;
   height: calc(100% + var(--bh) * 0.12);
   background: var(--accent);
   clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 96%, 0 100%);
 }
-.mini-page { position: absolute; inset: 7% 8%; overflow: hidden; font-family: var(--font-serif), serif; font-size: calc(var(--bw) * 0.022); line-height: 1.32; color: var(--ink); }
-.mini-head { display: flex; justify-content: center; padding-bottom: 0.4em; margin-bottom: 0.9em; border-bottom: 1px solid var(--ink); text-transform: uppercase; letter-spacing: 0.2em; font-size: 0.85em; }
-.mini-cols { columns: 2; column-gap: 7%; column-rule: 1px solid oklch(0.8 0 0); }
-.mini-cols p { text-align: justify; hyphens: auto; }
-.mini-cols sup { font-size: 0.6em; line-height: 0; }
+/* A Bible page, sized only in container units: the 3D page and its flat twin lay out identically at any size. */
+.pageblock, .leaf-front, .leaf-back, .page { container-type: inline-size; }
+.folio {
+  position: absolute;
+  inset: 7% 7.5% 6% 8.5%;
+  overflow: hidden;
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 2.3cqw;
+  line-height: 1.32;
+  color: oklch(0.16 0 0 / var(--ink-a, 1));
+}
+.folio-head { display: flex; justify-content: space-between; margin-bottom: 1.1em; padding-bottom: 0.35em; border-bottom: 0.2cqw solid; font-size: 0.8em; letter-spacing: 0.16em; text-transform: uppercase; }
+.folio-cols { columns: 2; column-gap: 6cqw; column-rule: 0.15cqw solid oklch(0.8 0 0); }
+.folio p { margin-bottom: 0.15em; text-align: justify; hyphens: auto; }
+.folio sup { font-size: 0.6em; line-height: 0; vertical-align: 0.6em; margin-right: 0.2em; font-weight: 500; }
 
 .hero-ui {
   position: absolute;
@@ -350,25 +363,11 @@ main { position: relative; z-index: var(--z-section); }
 .cap-body { position: absolute; right: var(--g); bottom: calc(var(--g) * 2); max-width: 24rem; font-size: var(--t-lead); line-height: 1.45; text-wrap: pretty; }
 .moving .hero-caption { visibility: visible; }
 
-/* the close-up page */
-.page-layer { position: absolute; inset: 0; overflow: hidden; background: var(--page); color: var(--ink); visibility: hidden; }
-.page {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 54em;
-  padding: 3em 3.5em 3em 4em;
-  font-family: var(--font-serif), Georgia, serif;
-  font-size: clamp(18px, 1.15vw + 6px, 27px);
-  line-height: 1.42;
-  border-left: 1px solid var(--line-light);
-}
-.page-head { display: flex; justify-content: space-between; margin-bottom: 1.4em; padding-bottom: 0.4em; border-bottom: 1px solid var(--ink); font-size: 0.78em; letter-spacing: 0.14em; text-transform: uppercase; }
-.page-cols { display: grid; grid-template-columns: 1fr 1fr; }
-.page-col { position: relative; padding-right: 1.3em; }
-.page-col + .page-col { padding: 0 0 0 1.3em; border-left: 1px solid oklch(0.8 0 0); }
-.page-col p { margin-bottom: 0.2em; text-align: justify; hyphens: auto; }
-.page-col sup { font-size: 0.6em; line-height: 0; vertical-align: 0.6em; margin-right: 0.25em; font-weight: 500; }
+/* the flat twin of the right-hand page; JS sizes it and lays it over the 3D page */
+.page-layer { position: absolute; inset: 0; visibility: hidden; pointer-events: none; }
+.page { position: absolute; top: 0; left: 0; width: 1000px; aspect-ratio: 0.7215; background: var(--page); transform-origin: 0 0; --ink-a: 1; }
+.page-ribbon { position: absolute; top: 0; bottom: 0; left: 2.525%; width: 3.535%; background: var(--accent); }
+.hl-clause { color: var(--ink); }
 .sc { font-size: 0.8em; letter-spacing: 0.04em; }
 .dropcap { float: left; margin: 0.05em 0.12em 0 0; font-size: 3.3em; line-height: 0.82; font-weight: 500; }
 .hl-bar {
@@ -381,7 +380,7 @@ main { position: relative; z-index: var(--z-section); }
   transform-origin: left center;
   pointer-events: none;
 }
-.page-caption { position: absolute; left: var(--g); bottom: var(--g); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+.page-caption { visibility: hidden; position: absolute; left: var(--g); bottom: var(--g); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
 
 /* ---------- 2 · the verse ---------- */
 .verse { position: relative; z-index: 1; height: 100vh; display: grid; align-items: center; overflow: hidden; }
@@ -537,7 +536,7 @@ main { position: relative; z-index: var(--z-section); }
   .pulse, .svc-link line { animation: none; }
   .swap-row span, .plate-fill, .cta-flood { transition: none; }
 }
-.still .page-layer, .still .hero-caption { display: none; }
+.still .page-layer, .still .hero-caption, .still .page-caption { display: none; }
 .still .house { height: auto; }
 .still .house-inside { position: relative; height: 100vh; margin-top: 100vh; }
 .still .ministries { height: auto; }

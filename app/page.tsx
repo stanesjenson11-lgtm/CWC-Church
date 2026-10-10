@@ -84,6 +84,14 @@ const Verses = ({ from, to, live }: { from: number; to: number; live?: boolean }
   </>
 );
 
+/** One Bible page. Sized entirely in container units, so the 3D page and the flat close-up lay out identically. */
+const Sheet = ({ from, to, live, head = true }: { from: number; to: number; live?: boolean; head?: boolean }) => (
+  <div className="folio">
+    {head && <p className="folio-head"><span>Joshua</span><span>24</span></p>}
+    <div className="folio-cols"><Verses from={from} to={to} live={live} /></div>
+  </div>
+);
+
 /* ---------- content ---------- */
 
 type Row = { word: string; img: string; copy: [string, string] } | { side: string; align: 'left' | 'right' };
@@ -176,6 +184,7 @@ export default function Home() {
         <section id="book" className="hero" data-section="book">
           <canvas className="contours" data-tone="ink" aria-hidden="true" />
 
+          <div className="camera">
           <div className="scene" aria-hidden="true">
             <div className="book-tilt">
               <div className="book">
@@ -185,12 +194,12 @@ export default function Home() {
                 <div className="face edge-bottom" />
                 <div className="face edge-fore" />
                 <div className="face pageblock">
-                  <div className="mini-page"><p className="mini-head">Joshua 24</p><div className="mini-cols"><Verses from={15} to={33} /></div></div>
+                  <Sheet from={15} to={33} />
                 </div>
                 {[0, 1, 2, 3, 4].map((i) => (
                   <div className="leaf" key={i} style={{ '--i': i } as React.CSSProperties}>
-                    <div className="leaf-front"><div className="mini-page"><div className="mini-cols"><Verses from={2 + i * 3} to={16 + i * 3} /></div></div></div>
-                    <div className="leaf-back"><div className="mini-page"><p className="mini-head">Joshua 24</p><div className="mini-cols"><Verses from={1} to={14} /></div></div></div>
+                    <div className="leaf-front"><Sheet from={2 + i * 3} to={16 + i * 3} head={false} /></div>
+                    <div className="leaf-back"><Sheet from={1} to={14} /></div>
                   </div>
                 ))}
                 <div className="cover">
@@ -200,6 +209,15 @@ export default function Home() {
                 <div className="ribbon" />
               </div>
             </div>
+          </div>
+
+          {/* The flat twin of the right-hand page: laid exactly over the 3D page, then the camera keeps going. */}
+          <div className="page-layer" aria-label="Joshua chapter 24, verses 15 to 33, King James Version">
+            <div className="page">
+              <Sheet from={15} to={33} live />
+              <span className="page-ribbon" aria-hidden="true" />
+            </div>
+          </div>
           </div>
 
           <div className="hero-ui">
@@ -243,16 +261,7 @@ export default function Home() {
             <p className="cap-body">Handed down through generations, read at tables and bedsides, worn soft at the edges. Still open. Still speaking.</p>
           </div>
 
-          <div className="page-layer" aria-label="Joshua chapter 24, verses 15 to 33, King James Version">
-            <div className="page">
-              <p className="page-head"><span>Joshua</span><span>24</span></p>
-              <div className="page-cols">
-                <div className="page-col"><Verses from={15} to={24} live /></div>
-                <div className="page-col"><Verses from={25} to={33} /></div>
-              </div>
-            </div>
-            <p className="page-caption"><span className="accent">Red letter</span> · Joshua 24:15</p>
-          </div>
+          <p className="page-caption"><span className="accent">Red letter</span> · Joshua 24:15</p>
         </section>
 
         {/* 2 · THE VERSE */}

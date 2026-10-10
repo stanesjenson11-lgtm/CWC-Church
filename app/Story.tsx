@@ -77,6 +77,77 @@ export default function Story({ children }: { children: React.ReactNode }) {
       };
       seatBook();
 
+      /* ---------- the close-up: a flat twin of the right-hand page, under one camera with the book ---------- */
+      const HANDOFF = 0.66; // the book lies flat from here; the twin takes over the page and the camera keeps moving
+      const camera = one('.camera');
+      const block = one('.pageblock');
+      const page = one('.page');
+      const v15 = one('#v15');
+      const clause = one('.hl-clause');
+      const sheet = clause.closest('.folio') as HTMLElement;
+      const hlWords = SplitText.create(clause, { type: 'words', tag: 'span' }).words as HTMLElement[];
+      const hl = { p: reduce ? 1 : 0 };
+      let bars: HTMLElement[] = [];
+      const paintBars = () => bars.forEach((b, i) => (b.style.transform = `scaleX(${Math.min(1, Math.max(0, hl.p * bars.length - i))})`));
+      // Red letter: one crimson marker stroke per line of "but as for me and my house…", drawn left to right.
+      const layoutBars = () => {
+        bars.forEach((b) => b.remove());
+        const box = sheet.getBoundingClientRect();
+        const k = box.width / sheet.offsetWidth || 1; // undo whatever scale the page is drawn at
+        const lines: DOMRect[][] = [];
+        hlWords.map((w) => w.getBoundingClientRect()).forEach((r) => {
+          const line = lines.at(-1);
+          if (line && Math.abs(line[0].top - r.top) < r.height / 2) line.push(r);
+          else lines.push([r]);
+        });
+        bars = lines.map((l) => {
+          const a = l[0];
+          const b = l[l.length - 1];
+          const bar = document.createElement('span');
+          bar.className = 'hl-bar';
+          Object.assign(bar.style, {
+            left: `calc(${(a.left - box.left) / k}px - .15em)`,
+            top: `${(a.top - box.top) / k}px`,
+            width: `calc(${(b.right - a.left) / k}px + .3em)`,
+            height: `${a.height / k}px`,
+          });
+          sheet.append(bar);
+          return bar;
+        });
+        paintBars();
+      };
+
+      let geo: { ox: number; oy: number; zoom: number; tx: number; ty: number } | null = null;
+      const cam = { t: 0 };
+      // Lay the flat page exactly over the 3D page, and work out where the camera has to end up.
+      const measure = () => {
+        gsap.set(camera, { x: 0, y: 0, scale: 1 });
+        const r = block.getBoundingClientRect();
+        const aspect = r.height / r.width;
+        gsap.set(page, { x: 0, y: 0, scale: 1, width: 1000, height: 1000 * aspect });
+        const column = Math.min(innerWidth * 0.86, 620); // how wide verse 15's column reads once the camera arrives
+        const P = (1000 * column) / v15.getBoundingClientRect().width;
+        gsap.set(page, { width: P, height: P * aspect, x: r.left, y: r.top, scale: r.width / P });
+        const v = v15.getBoundingClientRect();
+        const ox = v.left + v.width / 2;
+        const oy = v.top + Math.min(v.height, innerHeight * 0.7) / 2;
+        // Arriving at zoom P / r.width puts the page back at its natural size: the text is crisp, not a scaled-up bitmap.
+        geo = { ox, oy, zoom: P / r.width, tx: innerWidth / 2 - ox, ty: innerHeight / 2 - oy };
+        layoutBars();
+      };
+      const applyCamera = () => {
+        if (!geo) measure();
+        const g = geo!;
+        // Exponential zoom reads as a steady dolly; linear zoom would rush at the end.
+        gsap.set(camera, { transformOrigin: `${g.ox}px ${g.oy}px`, scale: g.zoom ** cam.t, x: g.tx * cam.t, y: g.ty * cam.t });
+      };
+      const onCameraRefresh = () => {
+        geo = null;
+        if (cam.t > 0) applyCamera();
+      };
+      ScrollTrigger.addEventListener('refresh', onCameraRefresh);
+      off.push(() => ScrollTrigger.removeEventListener('refresh', onCameraRefresh));
+
       let intro: gsap.core.Timeline | undefined;
       let heroTl: gsap.core.Timeline | undefined;
       if (!reduce) {
@@ -123,67 +194,21 @@ export default function Story({ children }: { children: React.ReactNode }) {
           .to(book, { xPercent: 50, duration: 0.14, ease: 'power2.inOut' }, 0.28)
           .to('.cover', { rotationY: -179.6, duration: 0.14, ease: 'power2.inOut' }, 0.28)
           .to('.leaf', { rotationY: -179.4, z: (i) => depth() / 2 + 1 + i * 0.5, duration: 0.1, stagger: 0.035, ease: 'power2.inOut' }, 0.4)
-          .to(book, { rotationX: 14, rotationZ: 0, scale: 1.2, duration: 0.1, ease: 'power1.inOut' }, 0.56)
-          .to('.scene', { scale: 7, duration: 0.12, ease: 'power2.in' }, 0.65)
-          .to('#book .contours', { autoAlpha: 0, duration: 0.08 }, 0.65)
-          .fromTo('.page-layer', { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.05 }, 0.73)
-          .fromTo('.page', { scale: 1.6 }, { scale: 1, duration: 0.1, ease: 'power2.out' }, 0.73)
-          .to('.page', { scale: 1.1, duration: 0.2 }, 0.83)
-          .fromTo('.page-caption', { autoAlpha: 0, y: 20 }, { autoAlpha: 1, y: 0, duration: 0.05 }, 0.86)
+          // The book settles flat, facing the camera, so its right page is a true rectangle on screen.
+          .to(book, { rotationX: 0, rotationZ: 0, scale: 1.12, duration: 0.1, ease: 'power2.inOut' }, 0.56)
+          // One continuous move: the twin page appears exactly over the 3D page, then a single camera carries both.
+          .set('.page-layer', { autoAlpha: 1 }, HANDOFF)
+          .to(cam, { t: 1, duration: 0.2, ease: 'power2.inOut', onUpdate: applyCamera }, HANDOFF)
+          .fromTo('.scene', { filter: 'blur(0px)' }, { filter: 'blur(5px)', duration: 0.2, ease: 'power2.in' }, HANDOFF)
+          .to('#book .contours', { autoAlpha: 0, duration: 0.1 }, HANDOFF)
+          .to(hl, { p: 1, duration: 0.08, onUpdate: paintBars }, 0.87)
+          .fromTo('.page-caption', { autoAlpha: 0, y: 20 }, { autoAlpha: 1, y: 0, duration: 0.05 }, 0.9)
+          // Everything but the verse falls back, so the next scene reads as the same words, closer.
+          .to(page, { '--ink-a': 0.2, duration: 0.05 }, 0.95)
           .to({}, { duration: 0 }, 1);
       }
 
-      // Frame the close-up on verse 15 (the page is wider and taller than the screen).
-      const page = one('.page');
-      const v15 = one('#v15');
-      const centerPage = () => {
-        const col = v15.offsetParent as HTMLElement;
-        // On a phone the verse is wider than the screen, so pin its left edge 20px in instead of centring it.
-        const x = col.offsetLeft + v15.offsetLeft + (innerWidth < 700 ? innerWidth / 2 - 20 : v15.offsetWidth / 2);
-        const y = col.offsetTop + v15.offsetTop + v15.offsetHeight * 0.65;
-        gsap.set(page, { x: innerWidth / 2 - x, y: innerHeight / 2 - y, transformOrigin: `${x}px ${y}px` });
-      };
-      centerPage();
-      ScrollTrigger.addEventListener('refreshInit', centerPage);
       ScrollTrigger.addEventListener('refresh', seatBook);
-
-      // Red letter: a crimson marker stroke drawn one line at a time across "but as for me and my house…".
-      const clause = one('.hl-clause');
-      SplitText.create(clause, {
-        type: 'words', tag: 'span', autoSplit: true,
-        onSplit: (s) => {
-          const host = clause.closest('.page-col') as HTMLElement;
-          host.querySelectorAll('.hl-bar').forEach((b) => b.remove());
-          const box = host.getBoundingClientRect();
-          const k = box.width / host.offsetWidth || 1;
-          const lines: DOMRect[][] = [];
-          (s.words as HTMLElement[]).map((w) => w.getBoundingClientRect()).forEach((r) => {
-            const line = lines.at(-1);
-            if (line && Math.abs(line[0].top - r.top) < r.height / 2) line.push(r);
-            else lines.push([r]);
-          });
-          const bars = lines.map((l) => {
-            const a = l[0];
-            const b = l[l.length - 1];
-            const bar = document.createElement('span');
-            bar.className = 'hl-bar';
-            Object.assign(bar.style, {
-              left: `calc(${(a.left - box.left) / k}px - .15em)`,
-              top: `${(a.top - box.top) / k}px`,
-              width: `calc(${(b.right - a.left) / k}px + .3em)`,
-              height: `${a.height / k}px`,
-            });
-            host.append(bar);
-            return bar;
-          });
-          if (!heroTl) return;
-          // Drawn inside the hero's own scrubbed timeline. A separate trigger keyed off the pinned
-          // section would get the pin's spacing added twice and start a whole stage late.
-          const draw = gsap.fromTo(bars, { scaleX: 0 }, { scaleX: 1, ease: 'none', duration: 0.16 / bars.length, stagger: 0.16 / bars.length });
-          heroTl.add(draw, 0.8);
-          return draw;
-        },
-      });
 
       if (!reduce) {
         /* ---------- 2 · the verse: read word by word, then the house slides over it ---------- */
@@ -391,7 +416,6 @@ export default function Story({ children }: { children: React.ReactNode }) {
         lenis?.destroy();
         gsap.ticker.remove(raf);
         gsap.ticker.remove(tickContours);
-        ScrollTrigger.removeEventListener('refreshInit', centerPage);
         ScrollTrigger.removeEventListener('refresh', seatBook);
         document.documentElement.classList.remove('js', 'still', 'moving', 'menu-open');
       };
