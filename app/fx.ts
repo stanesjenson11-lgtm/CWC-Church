@@ -22,7 +22,6 @@ const LINE_SCALE = 3.8;
 const LINE_COUNT = 2.5;
 const WAVE_AMOUNT = 0.37;
 const WAVE_SPEED = 0.55;
-const CELLS = 96;
 
 const field = (x: number, y: number, t: number) => {
   let f = Math.sin(x + t * 0.6) * 0.5;
@@ -32,7 +31,7 @@ const field = (x: number, y: number, t: number) => {
   return f * 0.5 + 0.5;
 };
 
-export function contours(canvas: HTMLCanvasElement, color: string) {
+export function contours(canvas: HTMLCanvasElement, color: string, cells = 96) {
   const start = performance.now();
   let values = new Float32Array(0);
 
@@ -40,7 +39,7 @@ export function contours(canvas: HTMLCanvasElement, color: string) {
     const { ctx, w, h } = fit(canvas);
     if (!w || !h) return;
     const t = ((now - start) / 1000) * WAVE_SPEED;
-    const cols = w >= h ? CELLS : Math.max(8, Math.round((CELLS * w) / h));
+    const cols = w >= h ? cells : Math.max(8, Math.round((cells * w) / h));
     const rows = Math.max(8, Math.round((cols * h) / w));
     const sx = w / cols;
     const sy = h / rows;

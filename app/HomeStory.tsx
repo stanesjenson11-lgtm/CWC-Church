@@ -4,67 +4,36 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { SplitText } from 'gsap/SplitText';
 import { useGSAP } from '@gsap/react';
-import Lenis from 'lenis';
-import { contours, dissolve } from './fx';
+import { getLenis, isPhone, prefersReduced, visit } from './motion';
 
 gsap.registerPlugin(ScrollTrigger, SplitText, useGSAP);
 
-const HERO_VH = 6; // hero → book opens → page close-up, in viewport heights of scroll
-const ARK_VH = 4;
+// Pinned scroll lengths, in viewport heights. Shorter on phones, where a thumb covers less ground per swipe.
+const heroVh = () => (isPhone() ? 4.5 : 6); // hero → book opens → page close-up
+const arkVh = () => (isPhone() ? 3 : 4);
 
-export default function Story({ children }: { children: React.ReactNode }) {
+/** The home page's own scenes. Shared motion (reveals, seams, cursor, menu) lives in Shell. */
+export default function HomeStory({ children }: { children: React.ReactNode }) {
   const root = useRef<HTMLDivElement>(null);
 
   useGSAP(
     (_, contextSafe) => {
-      history.scrollRestoration = 'manual';
-      scrollTo(0, 0);
+      const first = visit.firstLoad;
+      if (first) {
+        history.scrollRestoration = 'manual';
+        scrollTo(0, 0);
+      }
       const q = gsap.utils.selector(root);
       const one = <T extends Element = HTMLElement>(s: string) => q(s)[0] as unknown as T;
-      const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const reduce = prefersReduced();
       const finePointer = matchMedia('(hover: hover) and (pointer: fine)').matches;
-      const tokens = getComputedStyle(document.documentElement);
-      const color = (name: string) => tokens.getPropertyValue(name).trim();
       const off: (() => void)[] = [];
-      const on = <K extends keyof WindowEventMap>(t: Window | Document | Element, type: K | string, fn: (e: never) => void, opts?: AddEventListenerOptions) => {
-        t.addEventListener(type, fn as EventListener, opts);
-        off.push(() => t.removeEventListener(type, fn as EventListener));
-      };
       let alive = true;
-      document.documentElement.classList.add('js', reduce ? 'still' : 'moving');
+      const lenis = getLenis();
+      if (first) lenis?.stop();
 
-      /* ---------- smooth scroll ---------- */
-      const lenis = reduce ? null : new Lenis({ anchors: true, autoRaf: false });
-      const raf = (t: number) => lenis?.raf(t * 1000);
-      if (lenis) {
-        lenis.on('scroll', ScrollTrigger.update);
-        gsap.ticker.add(raf);
-        gsap.ticker.lagSmoothing(0);
-        lenis.stop();
-      }
-
-      /* ---------- canvases ---------- */
-      const contourLoops = q('canvas.contours').map((cv) => {
-        const draw = contours(cv as HTMLCanvasElement, cv.getAttribute('data-tone') === 'ink' ? 'rgb(14 14 14 / 0.09)' : 'rgb(245 245 245 / 0.13)');
-        let visible = false;
-        let last = 0;
-        const io = new IntersectionObserver(([e]) => (visible = e.isIntersecting));
-        io.observe(cv);
-        off.push(() => io.disconnect());
-        return { draw, tick: (now: number) => visible && now - last > 33 && ((last = now), draw(now)) };
-      });
-      const tickContours = () => contourLoops.forEach((l) => l.tick(performance.now()));
-      if (reduce) contourLoops.forEach((l) => l.draw());
-      else gsap.ticker.add(tickContours);
-
-
-      /* ---------- text engine: words / letters rise once, when they arrive ---------- */
-      const words = (el: Element, delay = 0) =>
-        gsap.from(SplitText.create(el, { type: 'words', aria: 'auto' }).words, { opacity: 0, y: '0.35em', duration: 0.9, stagger: 0.11, delay, ease: 'power3.out', paused: true });
-      const letters = (el: Element) =>
-        gsap.from(SplitText.create(el, { type: 'chars', aria: 'auto' }).chars, { opacity: 0, y: '0.3em', duration: 0.6, stagger: 0.026, ease: 'power3.out', paused: true });
-      const onArrive = (el: Element, anim: gsap.core.Tween, start = 'top 82%') =>
-        ScrollTrigger.create({ trigger: el, start, once: true, onEnter: () => anim.play() });
+      const words = (el: Element) =>
+        gsap.from(SplitText.create(el, { type: 'words', aria: 'auto' }).words, { opacity: 0, y: '0.35em', duration: 0.9, stagger: 0.11, ease: 'power3.out', paused: true });
 
       /* ---------- 1 · hero: veil hands over to an entrance ---------- */
       const book = one('.book');
@@ -91,7 +60,7 @@ export default function Story({ children }: { children: React.ReactNode }) {
       const paintBars = () => bars.forEach((b, i) => (b.style.transform = `scaleX(${Math.min(1, Math.max(0, hl.p * bars.length - i))})`));
       // Red letter: one crimson marker stroke per line of "but as for me and my house…", drawn left to right.
       const layoutBars = () => {
-        bars.forEach((b) => b.remove());
+        sheet.querySelectorAll('.hl-bar').forEach((b) => b.remove()); // including any left from a previous visit
         const box = sheet.getBoundingClientRect();
         const k = box.width / sheet.offsetWidth || 1; // undo whatever scale the page is drawn at
         const lines: DOMRect[][] = [];
@@ -166,18 +135,22 @@ export default function Story({ children }: { children: React.ReactNode }) {
         let tiltOn = true;
         const rx = gsap.quickTo('.book-tilt', 'rotationX', { duration: 0.9, ease: 'power3.out' });
         const ry = gsap.quickTo('.book-tilt', 'rotationY', { duration: 0.9, ease: 'power3.out' });
-        if (finePointer) on(window, 'pointermove', (e: PointerEvent) => {
+        const lean = (e: PointerEvent) => {
           if (!tiltOn) return;
           rx((0.5 - e.clientY / innerHeight) * 10);
           ry((e.clientX / innerWidth - 0.5) * 14);
-        });
+        };
+        if (finePointer) {
+          window.addEventListener('pointermove', lean);
+          off.push(() => window.removeEventListener('pointermove', lean));
+        }
 
         // One pinned stage: UI leaves, the book tilts to a 3/4 view, opens, pages turn, the camera dives into Joshua 24.
         heroTl = gsap
           .timeline({
             defaults: { ease: 'none' },
             scrollTrigger: {
-              trigger: '#book', pin: true, start: 'top top', end: () => `+=${innerHeight * HERO_VH}`, scrub: 1,
+              trigger: '#book', pin: true, start: 'top top', end: () => `+=${innerHeight * heroVh()}`, scrub: 1,
               onUpdate: (s) => {
                 const rest = s.progress < 0.02;
                 if (rest !== tiltOn) { tiltOn = rest; if (!rest) { rx(0); ry(0); } }
@@ -228,7 +201,7 @@ export default function Story({ children }: { children: React.ReactNode }) {
 
         /* ---------- 3 · the house: draw the ark, then go in through its door ---------- */
         gsap
-          .timeline({ defaults: { ease: 'none' }, scrollTrigger: { trigger: '#house', pin: true, start: 'top top', end: () => `+=${innerHeight * ARK_VH}`, scrub: 1 } })
+          .timeline({ defaults: { ease: 'none' }, scrollTrigger: { trigger: '#house', pin: true, start: 'top top', end: () => `+=${innerHeight * arkVh()}`, scrub: 1 } })
           .fromTo('.ark-lines path', { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.3, stagger: 0.015 }, 0)
           .fromTo('.door-light', { opacity: 0 }, { opacity: 1, duration: 0.08 }, 0.22)
           .fromTo('.house-caption > *', { y: 40, autoAlpha: 0 }, { y: 0, autoAlpha: 1, stagger: 0.03, duration: 0.1 }, 0.12)
@@ -240,23 +213,6 @@ export default function Story({ children }: { children: React.ReactNode }) {
           .fromTo('.house-inside img', { scale: 1.3 }, { scale: 1, duration: 0.2, ease: 'power2.out' }, 0.76)
           .fromTo('.house-inside-ui > *', { y: 50, autoAlpha: 0 }, { y: 0, autoAlpha: 1, stagger: 0.04, duration: 0.1 }, 0.84)
           .to({}, { duration: 0 }, 1);
-
-        /* ---------- 4 · life: a rail with a thread and a turning marker; three parallax depths per row ---------- */
-        const rail = one('.rail');
-        gsap.timeline({ scrollTrigger: { trigger: rail, start: 'top center', end: 'bottom bottom', scrub: 0.6 } })
-          .fromTo('.rail-run', { scaleY: 0 }, { scaleY: 1, ease: 'none' }, 0)
-          .fromTo('.rail-mark', { y: 0, rotation: 0 }, { y: () => rail.offsetHeight, rotation: 1800, ease: 'none' }, 0);
-        q('.row').forEach((row) => {
-          const span = { trigger: row, start: 'top bottom', end: 'bottom top', scrub: true };
-          const travel = row.classList.contains('side') ? 60 : 20;
-          gsap.fromTo(row.querySelector('.row-plate'), { y: travel }, { y: -travel, ease: 'none', scrollTrigger: span });
-          gsap.fromTo(row.querySelector('.plate-fill img'), { yPercent: -8 }, { yPercent: 0, ease: 'none', scrollTrigger: { trigger: row, start: 'top bottom', end: 'top center', scrub: true } });
-          const copy = row.querySelector('.row-copy');
-          if (copy) {
-            gsap.fromTo(copy, { y: 110 }, { y: -110, ease: 'none', scrollTrigger: span });
-            gsap.from(copy, { autoAlpha: 0, duration: 0.9, delay: 0.22, ease: 'power3.out', scrollTrigger: { trigger: row, start: 'top 75%', once: true } });
-          }
-        });
 
         /* ---------- 5 · ministries: pinned horizontal run ---------- */
         const track = one('.track');
@@ -274,112 +230,16 @@ export default function Story({ children }: { children: React.ReactNode }) {
           });
         });
 
-        /* ---------- 6 · leaders: the figure rides up; the strip arrives card by card ---------- */
-        gsap.fromTo('.figure', { yPercent: 6 }, { yPercent: 0, ease: 'none', scrollTrigger: { trigger: '#leaders', start: 'top bottom', end: 'bottom bottom', scrub: true } });
-        gsap.from('.svc', { y: 16, autoAlpha: 0, stagger: 0.09, duration: 0.8, ease: 'power3.out', scrollTrigger: { trigger: '.band', start: 'top 85%', once: true } });
-        gsap.from('.svc-link', { scaleX: 0, stagger: 0.09, duration: 0.8, delay: 0.3, ease: 'power3.out', scrollTrigger: { trigger: '.band', start: 'top 85%', once: true } });
-        gsap.from('.leader-list, .leaders-intro', { y: 24, autoAlpha: 0, stagger: 0.14, duration: 0.9, ease: 'power3.out', scrollTrigger: { trigger: '#leaders', start: 'top 55%', once: true } });
-
-        /* ---------- generic word / letter reveals ---------- */
-        q('[data-words]').forEach((el) => el.classList.contains('hero-title') || onArrive(el, words(el)));
-        q('.row-word, .footer-nav a').forEach((el) => onArrive(el, letters(el), el.closest('footer') ? 'top 98%' : 'top 75%'));
-        gsap.from('.footer-info, .footer-row > *', { y: 12, autoAlpha: 0, stagger: 0.08, duration: 0.8, ease: 'power3.out', scrollTrigger: { trigger: '#contact', start: 'top 50%', once: true } });
-      }
-
-      /* ---------- pixel-dissolve seams (created after the pins, so their spacing is counted) ---------- */
-      if (!reduce)
-        q('canvas.dissolve').forEach((cv) => {
-          const draw = dissolve(cv as HTMLCanvasElement, color(cv.getAttribute('data-carry') === 'light' ? '--page' : '--ink'), color('--accent'));
-          ScrollTrigger.create({
-            trigger: cv.parentElement, start: 'top bottom', end: 'top top',
-            onUpdate: (s) => draw(s.progress), onRefresh: (s) => draw(s.progress),
-          });
-        });
-
-      /* ---------- nav: active section, sliding dot ---------- */
-      const dot = one('.nav-dot');
-      const links = q('.nav [data-nav]');
-      const setActive = (id: string) => {
-        const a = links.find((l) => l.getAttribute('data-nav') === id);
-        links.forEach((l) => l.classList.toggle('is-active', l === a));
-        if (a) gsap.to(dot, { x: a.offsetLeft + a.offsetWidth / 2, autoAlpha: 1, duration: reduce ? 0 : 0.6, ease: 'expo.out' });
-      };
-      q('[data-section]').forEach((el) =>
-        ScrollTrigger.create({
-          trigger: el, start: 'top center', end: 'bottom center',
-          // enter / enterBack rather than toggle: pinned sections overlap, and the newest one should win
-          onEnter: () => setActive(el.getAttribute('data-section')!),
-          onEnterBack: () => setActive(el.getAttribute('data-section')!),
-        }),
-      );
-
-      /* ---------- leaders: hover or press a name to bring that person forward ---------- */
-      const show = (id: string) => {
-        q('.figure img').forEach((img) => {
-          const hit = img.getAttribute('data-leader') === id;
-          img.classList.toggle('is-on', hit);
-          img.setAttribute('alt', hit ? (q(`[data-show="${id}"]`)[0]?.textContent ?? '') : '');
-        });
-        q('[data-show]').forEach((b) => b.setAttribute('aria-pressed', String(b.getAttribute('data-show') === id)));
-      };
-      q('[data-show]').forEach((b) => {
-        const id = b.getAttribute('data-show')!;
-        on(b, 'mouseenter', () => show(id));
-        on(b, 'focus', () => show(id));
-        on(b, 'click', () => show(id));
-      });
-
-      /* ---------- menu sheet (below 1024px) ---------- */
-      const html = document.documentElement;
-      const burger = one<HTMLButtonElement>('.burger');
-      const openSheet = (open: boolean) => {
-        html.classList.toggle('menu-open', open);
-        burger.setAttribute('aria-expanded', String(open));
-        if (open) {
-          lenis?.stop();
-          gsap.fromTo('.sheet-nav a', { autoAlpha: 0, y: 12 }, { autoAlpha: 1, y: 0, stagger: 0.055, delay: 0.12, duration: 0.6, ease: 'power3.out' });
-          one<HTMLButtonElement>('.sheet-close').focus();
-        } else {
-          lenis?.start();
-          burger.focus();
-        }
-      };
-      on(burger, 'click', () => openSheet(true));
-      on(one('.sheet-close'), 'click', () => openSheet(false));
-      q('.sheet-nav a').forEach((a) => on(a, 'click', () => html.classList.contains('menu-open') && openSheet(false)));
-      on(window, 'keydown', (e: KeyboardEvent) => e.key === 'Escape' && html.classList.contains('menu-open') && openSheet(false));
-
-      /* ---------- cursor + magnetic buttons (fine pointers only) ---------- */
-      if (finePointer && !reduce) {
-        const cursor = one('.cursor');
-        const label = one('.cursor-label');
-        const cx = gsap.quickTo(cursor, 'x', { duration: 0.35, ease: 'power3.out' });
-        const cy = gsap.quickTo(cursor, 'y', { duration: 0.35, ease: 'power3.out' });
-        on(window, 'pointermove', (e: PointerEvent) => {
-          cx(e.clientX);
-          cy(e.clientY);
-          cursor.classList.add('is-on');
-        });
-        on(document, 'pointerover', (e: PointerEvent) => {
-          const t = (e.target as Element).closest('a, button, [data-cursor]');
-          cursor.classList.toggle('is-link', !!t);
-          label.textContent = t?.getAttribute('data-cursor') ?? '';
-        });
-        on(document.documentElement, 'pointerleave', () => cursor.classList.remove('is-on'));
-        q('[data-magnetic]').forEach((el) => {
-          const mx = gsap.quickTo(el, 'x', { duration: 0.6, ease: 'power3.out' });
-          const my = gsap.quickTo(el, 'y', { duration: 0.6, ease: 'power3.out' });
-          on(el, 'pointermove', (e: PointerEvent) => {
-            const r = el.getBoundingClientRect();
-            mx((e.clientX - r.left - r.width / 2) * 0.25);
-            my((e.clientY - r.top - r.height / 2) * 0.35);
-          });
-          on(el, 'pointerleave', () => (mx(0), my(0)));
-        });
       }
 
       /* ---------- the loading veil: the mark creeps to 70%, completes when ready, then lifts ---------- */
+      // Hidden, never removed: React owns this node and keeps the page alive between visits.
       const veil = one('.veil');
+      const hideVeil = () => (veil.style.display = 'none');
+      if (!first) {
+        hideVeil();
+        intro?.progress(1);
+      } else {
       const progress = { v: 0 };
       const paint = () => gsap.set('.veil-fill, .veil-meter span', { scaleY: (i) => (i === 0 ? progress.v : 1), scaleX: (i) => (i === 1 ? progress.v : 1) });
       const creep = gsap.to(progress, { v: 0.7, duration: 3, ease: 'power1.out', onUpdate: paint });
@@ -403,21 +263,20 @@ export default function Story({ children }: { children: React.ReactNode }) {
               intro?.play();
             }, '<')
             .add(() => {
-              veil.remove();
+              hideVeil();
               lenis?.start();
               ScrollTrigger.refresh();
             });
         }),
       );
+      }
 
       return () => {
         alive = false;
         off.forEach((f) => f());
-        lenis?.destroy();
-        gsap.ticker.remove(raf);
-        gsap.ticker.remove(tickContours);
+        bars.forEach((b) => b.remove());
         ScrollTrigger.removeEventListener('refresh', seatBook);
-        document.documentElement.classList.remove('js', 'still', 'moving', 'menu-open');
+        lenis?.start();
       };
     },
     { scope: root },
