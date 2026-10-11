@@ -150,6 +150,24 @@ export default function Shell({ children }: { children: React.ReactNode }) {
         off.push(() => ['mouseenter', 'focus', 'click'].forEach((t) => b.removeEventListener(t, fn)));
       });
 
+      /* ...and every 5 seconds the next one steps forward: only while the section is on screen, held while someone is choosing from the list */
+      const list = q('.leader-list')[0];
+      if (list && !reduce) {
+        const ids = q('[data-show]').map((b) => b.getAttribute('data-show')!);
+        const next = () => {
+          const now = q('[data-show][aria-pressed="true"]')[0]?.getAttribute('data-show') ?? ids[0];
+          show(ids[(ids.indexOf(now) + 1) % ids.length]);
+        };
+        let timer = 0;
+        let inView = false;
+        const hold = () => clearInterval(timer);
+        const run = () => (hold(), inView && (timer = window.setInterval(next, 5000)));
+        const events = [['pointerenter', hold], ['pointerleave', run], ['focusin', hold], ['focusout', run]] as const;
+        events.forEach(([t, f]) => list.addEventListener(t, f));
+        ScrollTrigger.create({ trigger: list.closest('.leaders'), start: 'top center', end: 'bottom center', onToggle: (s) => ((inView = s.isActive), run()) });
+        off.push(hold, () => events.forEach(([t, f]) => list.removeEventListener(t, f)));
+      }
+
       visit.firstLoad = false;
       requestAnimationFrame(() => ScrollTrigger.refresh());
       return () => off.forEach((f) => f());
