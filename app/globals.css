@@ -477,6 +477,7 @@ main { position: relative; z-index: var(--z-section); }
 /* ---------- shared: text links, inner page hero ---------- */
 .text-link { display: inline-flex; align-items: center; gap: 0.6rem; min-height: 44px; font-size: 0.875rem; font-weight: 600; text-transform: uppercase; transition: color 0.2s; }
 .text-link:hover { color: var(--accent); }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .page-hero { position: relative; z-index: 2; overflow: hidden; padding: calc(var(--g) + 8rem) var(--g) clamp(4rem, 9vw, 7rem); background: var(--white); }
 .page-hero-inner { position: relative; display: grid; gap: 2rem; justify-items: start; }
 .page-title { font-size: var(--t-display); max-width: 11em; }
@@ -552,19 +553,13 @@ main { position: relative; z-index: var(--z-section); }
 .give-quote { font-size: clamp(2.1rem, 4.6vw, 4.8rem); max-width: 20ch; }
 .give-ways { position: relative; z-index: 2; padding: clamp(5rem, 9vw, 8rem) var(--g); background: var(--white); }
 .give-ways h2 { font-size: clamp(2.2rem, 4.4vw, 4.4rem); margin-bottom: 2.5rem; }
+.give-lead { max-width: 40ch; margin: -1rem 0 2.5rem; }
 .give-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); gap: 1.5rem; max-width: 60rem; }
 .give-grid .bpanel { display: grid; gap: 0.75rem; justify-items: start; }
 .give-title { font-stretch: 62%; font-weight: 800; font-size: 1.9rem; line-height: 0.95; text-transform: uppercase; }
 .give-copy { color: var(--grey-light); line-height: 1.5; max-width: 34ch; }
 
 /* ---------- connect ---------- */
-.connect-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1.5rem; width: 100%; margin-top: 1.5rem; }
-.connect-grid .bpanel { display: grid; gap: 0.9rem; align-content: start; justify-items: start; }
-.connect-big { font-stretch: 62%; font-weight: 800; font-size: clamp(1.9rem, 3vw, 2.6rem); line-height: 1; text-transform: uppercase; }
-.connect-big:hover { color: var(--accent); }
-.connect-address { line-height: 1.5; }
-.connect-socials { list-style: none; display: grid; gap: 0.25rem; font-size: 1rem; font-weight: 600; text-transform: uppercase; }
-.connect-socials a { display: inline-flex; min-height: 44px; align-items: center; }
 .connect-card { position: relative; z-index: 2; overflow: hidden; padding: clamp(7rem, 12vw, 10rem) var(--g); }
 .connect-card-inner { position: relative; display: grid; grid-template-columns: 1fr 1.5fr; gap: clamp(2rem, 5vw, 5rem); align-items: start; }
 .card-intro { display: grid; gap: 1.5rem; }

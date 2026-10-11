@@ -25,7 +25,6 @@ export const ADDRESS = ['Vadarapalya, Hennur Gardens', 'Bengaluru, Karnataka 560
 export const NAV = [
   ['/about', 'About'],
   ['/events', 'Events'],
-  ['/give', 'Give'],
   ['/connect', 'Connect'],
 ] as const;
 
