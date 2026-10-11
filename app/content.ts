@@ -51,12 +51,13 @@ export const STORY = [
   'What began as a small gathering has grown into a church where people from different walks of life come together to worship, learn, and support one another. Our focus is simple—create a place where anyone can feel welcomed, connected, and encouraged in their journey of faith.',
 ]; // old site
 
-// wordAt: how far down the photo the word sits, at head height so the people in it stand in front of the word.
+// wordAt: where the word sits on its photo (and how big, when the default 16cqw is too wide): at head height,
+// so the people stand in front of it, but clear of faces so it still reads.
 export const VALUES = [
-  { word: 'Worship', img: 'w4', wordAt: '33%', copy: 'We believe in wholehearted, spirit-filled worship that brings people closer to God.' },
-  { word: 'Word', img: 'w5', wordAt: '45%', copy: 'We are grounded in the Bible, teaching practical truths that guide everyday life.' },
-  { word: 'Community', img: 'w11', wordAt: '18%', copy: 'We build strong relationships where people support, grow, and walk together.' },
-  { word: 'Mission', img: 'w2', wordAt: '22%', copy: 'We are committed to outreach—serving people and impacting lives beyond the church.' },
+  { word: 'Worship', img: 'w4', wordAt: { top: '33%' }, copy: 'We believe in wholehearted, spirit-filled worship that brings people closer to God.' },
+  { word: 'Word', img: 'w5', wordAt: { top: '37%' }, copy: 'We are grounded in the Bible, teaching practical truths that guide everyday life.' },
+  { word: 'Community', img: 'w11', wordAt: { top: '9.5%', fontSize: '11.5cqw' }, copy: 'We build strong relationships where people support, grow, and walk together.' },
+  { word: 'Mission', img: 'w2', wordAt: { top: '21%', left: '46%', fontSize: '15cqw' }, copy: 'We are committed to outreach—serving people and impacting lives beyond the church.' },
 ]; // old site
 
 export const MINISTRIES = [

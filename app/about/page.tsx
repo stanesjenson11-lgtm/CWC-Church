@@ -37,7 +37,7 @@ export default function About() {
                 <div className="row-plate">
                   {/* The word stands in the room, behind the people in the photo. */}
                   <Plate name={v.img} alt={`${v.word} at Compassion Worship Center`} cutout>
-                    <p className="row-word display" data-letters style={{ top: v.wordAt }}>{v.word}</p>
+                    <p className="row-word display" data-letters style={v.wordAt}>{v.word}</p>
                   </Plate>
                 </div>
                 <p className="row-copy">{v.copy}</p>

@@ -121,7 +121,9 @@ export default function Shell({ children }: { children: React.ReactNode }) {
             const span = { trigger: row, start: 'top bottom', end: 'bottom top', scrub: true };
             const travel = row.classList.contains('side') ? 60 : 20;
             gsap.fromTo(row.querySelector('.row-plate'), { y: travel }, { y: -travel, ease: 'none', scrollTrigger: span });
-            gsap.fromTo(row.querySelectorAll('.plate-fill img'), { yPercent: -8 }, { yPercent: 0, ease: 'none', scrollTrigger: { trigger: row, start: 'top bottom', end: 'top center', scrub: true } });
+            // A photo with a word set behind its people holds still in its frame, so the word never slides into a face or off the top.
+            if (!row.querySelector('.plate-cut'))
+              gsap.fromTo(row.querySelector('.plate-fill img'), { yPercent: -8 }, { yPercent: 0, ease: 'none', scrollTrigger: { trigger: row, start: 'top bottom', end: 'top center', scrub: true } });
             const copy = row.querySelector('.row-copy');
             if (copy) gsap.fromTo(copy, { y: 110 }, { y: -110, ease: 'none', scrollTrigger: span });
           });

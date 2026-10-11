@@ -425,7 +425,7 @@ main { position: relative; z-index: var(--z-section); }
 .side .row-plate { width: 23.125cqw; }
 .side.left .row-plate { left: var(--g); }
 .side.right .row-plate { right: var(--g); }
-/* Sized to the photo (cqw of .row-plate), so it covers the same people at any width. Its top comes from the data. */
+/* Sized to the photo (cqw of .row-plate), so it covers the same people at any width. Placed per photo by VALUES.wordAt. */
 .row-word { position: absolute; left: 50%; translate: -50% -50%; color: var(--accent); font-size: 16cqw; font-weight: 900; white-space: nowrap; pointer-events: none; }
 .row-copy { position: absolute; z-index: 3; left: 70.8333cqw; top: 50%; translate: 0 -50%; width: 19cqw; font-size: max(1.2cqw, 1rem); line-height: 1.4; text-wrap: pretty; pointer-events: none; }
 .row-copy strong { font-weight: 700; }
