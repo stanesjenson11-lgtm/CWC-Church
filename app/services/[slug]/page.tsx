@@ -37,7 +37,7 @@ export default async function ServicePage({ params }: { params: Promise<{ slug: 
           </div>
           <div className="lang-actions">
             <CTA href={`/connect?service=${s.slug}#card`} label="Get in touch" solid cursor="Connect" />
-            <CTA href="/watch" label="Watch live" cursor="Live" />
+            <CTA href="/events#watch" label="Watch live" cursor="Live" />
           </div>
         </div>
         <div className="lang-plate" data-drift>
@@ -57,7 +57,7 @@ export default async function ServicePage({ params }: { params: Promise<{ slug: 
           <p className="lead">The latest service will appear here. Meanwhile, every service is on our YouTube channel.</p>
         )}
         <div className="lang-more">
-          <Link className="text-link" href={`/watch?lang=${s.slug}#recent`}>More {s.lang} services<Arrow /></Link>
+          <Link className="text-link" href={`/events?lang=${s.slug}#recent`}>More {s.lang} services<Arrow /></Link>
           <span className="lang-also">
             Also at CWC:{' '}
             {others.map((o, i) => (

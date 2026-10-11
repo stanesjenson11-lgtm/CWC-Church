@@ -13,7 +13,7 @@ export default function SermonList({ videos }: { videos: V[] }) {
   const [picked, setPicked] = useState<string | null>(null);
   const player = useRef<HTMLDivElement>(null);
 
-  // A language page links here as /watch?lang=tamil#recent.
+  // A language page links here as /events?lang=tamil#recent.
   useEffect(() => {
     const lang = new URLSearchParams(location.search).get('lang');
     if (lang && FILTERS.some((f) => f.slug === lang)) setFilter(lang);
