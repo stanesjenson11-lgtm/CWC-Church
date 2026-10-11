@@ -7,6 +7,8 @@ import { NAV, CHURCH } from './content';
 import { Swap } from './ui';
 import { getLenis } from './motion';
 
+const ITEMS = [['/', 'Home'], ...NAV] as const;
+
 export default function Masthead() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -34,13 +36,15 @@ export default function Masthead() {
 
   const active = (href: string) => pathname === href;
 
-  // The mark always goes to the hero. On the home page itself there's no navigation to do, so scroll up to it.
+  // The mark and Home always go to the hero. On the home page itself there's no navigation to do, so scroll up to it.
   const toHero = (e: React.MouseEvent) => {
+    setOpen(false);
     if (pathname !== '/') return;
     e.preventDefault();
     const lenis = getLenis();
-    if (lenis) lenis.scrollTo(0, { duration: 1.6 });
-    else window.scrollTo({ top: 0 });
+    if (!lenis) return window.scrollTo({ top: 0 });
+    lenis.start(); // the open menu stops it, and starting after the scroll would cancel it
+    lenis.scrollTo(0, { duration: 1.6 });
   };
 
   return (
@@ -52,9 +56,9 @@ export default function Masthead() {
         </Link>
         <nav aria-label="Primary" className="nav">
           <ul>
-            {NAV.map(([href, label]) => (
+            {ITEMS.map(([href, label]) => (
               <li key={href}>
-                <Link href={href} className={active(href) ? 'is-active' : undefined} aria-current={pathname === href ? 'page' : undefined}>
+                <Link href={href} className={active(href) ? 'is-active' : undefined} aria-current={pathname === href ? 'page' : undefined} onClick={href === '/' ? toHero : undefined}>
                   <Swap text={label} />
                 </Link>
               </li>
@@ -70,8 +74,7 @@ export default function Masthead() {
       <div ref={sheet} className="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Menu" aria-hidden={!open} inert={!open}>
         <button ref={close} className="sheet-close" aria-label="Close menu" onClick={() => (setOpen(false), burger.current?.focus())}><span /><span /></button>
         <nav className="sheet-nav" aria-label="Menu">
-          <Link href="/">Home</Link>
-          {NAV.map(([href, label]) => <Link key={href} href={href} aria-current={pathname === href ? 'page' : undefined}>{label}</Link>)}
+          {ITEMS.map(([href, label]) => <Link key={href} href={href} aria-current={pathname === href ? 'page' : undefined} onClick={href === '/' ? toHero : undefined}>{label}</Link>)}
         </nav>
         <Link className="sheet-visit" href="/connect#card">Plan a visit</Link>
         <p className="sheet-foot">Sundays 11:30 AM English · Hennur Gardens, Bengaluru</p>
