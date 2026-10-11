@@ -1,7 +1,7 @@
 import { Fragment } from 'react';
 import type { Metadata } from 'next';
-import { LEADERS, LEADERSHIP_INTRO, OUTREACH, STORY, VALUES } from '../content';
-import { Brackets, CTA, PageHero, Plate } from '../ui';
+import { OUTREACH, STORY, VALUES } from '../content';
+import { CTA, PageHero, Plate } from '../ui';
 
 export const metadata: Metadata = { title: 'About', description: STORY[0] };
 
@@ -48,33 +48,8 @@ export default function About() {
         </div>
       </section>
 
-      {/* Leadership: hover or press a name to bring that person forward. */}
-      <section className="leaders" aria-labelledby="leaders-head">
-        <canvas className="contours" data-tone="ink" aria-hidden="true" />
-        <h2 id="leaders-head" className="display leaders-head" data-words>Our leadership<span className="accent">.</span></h2>
-        <div className="figure">
-          {LEADERS.map(([id, name], i) => (
-            <img key={id} src={`/img/leaders/${id}.webp`} alt={i === 0 ? name : ''} className={i === 0 ? 'is-on' : ''} data-leader={id} />
-          ))}
-        </div>
-        <div className="leaders-intro">
-          <p className="lead" data-rise>{LEADERSHIP_INTRO}</p>
-          <CTA href="/connect#card" label="Talk to a pastor" cursor="Talk" />
-        </div>
-        <div className="bpanel leader-list" data-rise>
-          <Brackets />
-          <p className="eyebrow accent">Pastors and leaders</p>
-          <ul>
-            {LEADERS.map(([id, name], i) => (
-              <li key={id}><button data-show={id} aria-pressed={i === 0}><span className="sq" />{name}</button></li>
-            ))}
-          </ul>
-        </div>
-      </section>
-
       {/* Outreach: the old site's own words. */}
       <section className="outreach dark" aria-labelledby="outreach-head">
-        <canvas className="dissolve" data-carry="light" aria-hidden="true" />
         <canvas className="contours" data-tone="paper" aria-hidden="true" />
         <div className="outreach-inner">
           <p className="credit" data-rise>Making a difference</p>

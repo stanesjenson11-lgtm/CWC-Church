@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import HomeStory from './HomeStory';
 import { joshua24 } from './joshua24';
-import { CHURCH, MINISTRIES, SERVICES, WELCOME, photo } from './content';
+import { CHURCH, LEADERS, LEADERSHIP_INTRO, MINISTRIES, SERVICES, WELCOME, photo } from './content';
 import { Arrow, Brackets, CTA, Plate } from './ui';
 
 const CLAUSE = 'but as for me and my house, we will serve the LORD.';
@@ -214,6 +214,30 @@ export default function Home() {
             ))}
           </div>
           <div className="track-progress" aria-hidden="true"><span /></div>
+        </section>
+
+        {/* Leadership: hover or press a name to bring that person forward. */}
+        <section className="leaders" aria-labelledby="leaders-head">
+          <canvas className="contours" data-tone="ink" aria-hidden="true" />
+          <h2 id="leaders-head" className="display leaders-head" data-words>Our leadership<span className="accent">.</span></h2>
+          <div className="figure">
+            {LEADERS.map(([id, name], i) => (
+              <img key={id} src={`/img/leaders/${id}.webp`} alt={i === 0 ? name : ''} className={i === 0 ? 'is-on' : ''} data-leader={id} />
+            ))}
+          </div>
+          <div className="leaders-intro">
+            <p className="lead" data-rise>{LEADERSHIP_INTRO}</p>
+            <CTA href="/connect#card" label="Talk to a pastor" cursor="Talk" />
+          </div>
+          <div className="bpanel leader-list" data-rise>
+            <Brackets />
+            <p className="eyebrow accent">Pastors and leaders</p>
+            <ul>
+              {LEADERS.map(([id, name], i) => (
+                <li key={id}><button data-show={id} aria-pressed={i === 0}><span className="sq" />{name}</button></li>
+              ))}
+            </ul>
+          </div>
         </section>
       </main>
     </HomeStory>
