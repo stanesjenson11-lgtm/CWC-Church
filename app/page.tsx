@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import HomeStory from './HomeStory';
-import ShareButton from './ShareButton';
 import { joshua24 } from './joshua24';
 import { CHURCH, MINISTRIES, SERVICES, WELCOME, photo } from './content';
 import { Arrow, Brackets, CTA, Plate } from './ui';
@@ -115,7 +114,7 @@ export default function Home() {
             </div>
             <div className="hero-foot">
               <p className="foot-link">Sundays · Four languages</p>
-              <CTA href="#verse" label="Open the book" solid />
+              <CTA href="#house" label="Open the book" solid />
               <p className="foot-link right">Scroll to open</p>
             </div>
           </div>
@@ -128,21 +127,9 @@ export default function Home() {
           <p className="page-caption"><span className="accent">Red letter</span> · Joshua 24:15</p>
         </section>
 
-        {/* THE VERSE */}
-        <section id="verse" className="verse dark">
-          <canvas className="dissolve" data-carry="light" aria-hidden="true" />
-          <div className="verse-inner">
-            <h2 className="display verse-text" data-read>But as for me and my house, we will serve the Lord.</h2>
-            <div className="verse-foot">
-              <p className="credit">Joshua 24:15 · KJV</p>
-              <ShareButton />
-            </div>
-          </div>
-          <div className="shade" aria-hidden="true" />
-        </section>
-
         {/* THE HOUSE: the ark draws itself on the waters, then we go through its door. */}
         <section id="house" className="house dark">
+          <canvas className="dissolve" data-carry="light" aria-hidden="true" />
           <canvas className="contours" data-tone="paper" aria-hidden="true" />
           <div className="ark-wrap">
             <svg className="ark" viewBox="0 0 1000 520" role="img" aria-label="Line drawing of Noah's ark with its door open">

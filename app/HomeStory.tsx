@@ -177,30 +177,27 @@ export default function HomeStory({ children }: { children: React.ReactNode }) {
           .fromTo('#book .contours', { autoAlpha: 1 }, { autoAlpha: 0, duration: 0.1, immediateRender: false }, HANDOFF) // the intro fades these in too
           .to(hl, { p: 1, duration: 0.08, onUpdate: paintBars }, 0.87)
           .fromTo('.page-caption', { autoAlpha: 0, y: 20 }, { autoAlpha: 1, y: 0, duration: 0.05 }, 0.9)
-          // Everything but the verse falls back, so the next scene reads as the same words, closer.
+          // Everything but the verse falls back.
           .to(page, { '--ink-a': 0.2, duration: 0.05 }, 0.95)
           .to({}, { duration: 0 }, 1);
+
+        // "Open the book" plays the opening and stops on the verse, instead of Lenis racing past it to #house.
+        const heroST = heroTl.scrollTrigger!;
+        const openBtn = one('.hero-foot .cta');
+        const openBook = (e: MouseEvent) => {
+          if (!lenis) return;
+          e.preventDefault();
+          e.stopPropagation(); // Lenis's anchor handler listens on window
+          lenis.scrollTo(heroST.end, { duration: heroVh(), easing: (t) => 0.5 - Math.cos(Math.PI * t) / 2 });
+        };
+        openBtn.addEventListener('click', openBook);
+        off.push(() => openBtn.removeEventListener('click', openBook));
       }
 
       ScrollTrigger.addEventListener('refresh', seatBook);
 
       if (!reduce) {
-        /* ---------- 2 · the verse: read word by word, then the house slides over it ---------- */
-        SplitText.create('.verse-text', {
-          type: 'words', aria: 'auto',
-          onSplit: (s) =>
-            gsap.fromTo(s.words, { opacity: 0.16 }, {
-              opacity: 1, stagger: 0.1, ease: 'none',
-              scrollTrigger: { trigger: '#verse', start: 'top 55%', end: 'top -10%', scrub: true },
-            }),
-        });
-        gsap.from('.verse-foot > *', { y: 24, autoAlpha: 0, stagger: 0.1, duration: 0.8, ease: 'power3.out', scrollTrigger: { trigger: '#verse', start: 'top 20%', toggleActions: 'play none none reverse' } });
-        ScrollTrigger.create({ trigger: '#verse', start: 'bottom bottom', end: '+=100%', pin: true, pinSpacing: false });
-        const recede = { trigger: '#house', start: 'top bottom', end: 'top top', scrub: true };
-        gsap.to('#verse .verse-inner', { scale: 0.9, ease: 'none', scrollTrigger: recede });
-        gsap.to('#verse .shade', { opacity: 0.55, ease: 'none', scrollTrigger: recede });
-
-        /* ---------- 3 · the house: draw the ark, then go in through its door ---------- */
+        /* ---------- 2 · the house: draw the ark, then go in through its door ---------- */
         gsap
           .timeline({ defaults: { ease: 'none' }, scrollTrigger: { trigger: '#house', pin: true, start: 'top top', end: () => `+=${innerHeight * arkVh()}`, scrub: 1 } })
           .fromTo('.ark-lines path', { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.3, stagger: 0.015 }, 0)
