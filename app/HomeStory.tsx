@@ -173,13 +173,13 @@ export default function HomeStory({ children }: { children: React.ReactNode }) {
           // One continuous move: the twin page appears exactly over the 3D page, then a single camera carries both.
           .set('.page-layer', { autoAlpha: 1 }, HANDOFF)
           .to(cam, { t: 1, duration: 0.2, ease: 'power2.inOut', onUpdate: applyCamera }, HANDOFF)
-          .fromTo('.scene', { filter: 'blur(0px)' }, { filter: 'blur(5px)', duration: 0.2, ease: 'power2.in' }, HANDOFF)
           .fromTo('#book .contours', { autoAlpha: 1 }, { autoAlpha: 0, duration: 0.1, immediateRender: false }, HANDOFF) // the intro fades these in too
           .to(hl, { p: 1, duration: 0.08, onUpdate: paintBars }, 0.87)
           .fromTo('.page-caption', { autoAlpha: 0, y: 20 }, { autoAlpha: 1, y: 0, duration: 0.05 }, 0.9)
           // Everything but the verse falls back.
           .to(page, { '--ink-a': 0.2, duration: 0.05 }, 0.95)
           .to({}, { duration: 0 }, 1);
+        if (!isPhone()) heroTl.fromTo('.scene', { filter: 'blur(0px)' }, { filter: 'blur(5px)', duration: 0.2, ease: 'power2.in' }, HANDOFF); // a blur over a 3D layer is too much for a phone
 
         // "Open the book" plays the opening and stops on the verse, instead of Lenis racing past it to #house.
         const heroST = heroTl.scrollTrigger!;

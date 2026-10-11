@@ -11,7 +11,7 @@ export default function Footer() {
           <canvas className="contours" data-tone="paper" aria-hidden="true" />
           <h2 className="display footer-head" data-words>Come as you are<span className="accent">.</span></h2>
           <nav className="footer-nav" aria-label="Footer">
-            {NAV.map(([href, label]) => <Link key={href} href={href} data-letters>{label}</Link>)}
+            {[['/', 'Home'], ...NAV].map(([href, label]) => <Link key={href} href={href} data-letters>{label}</Link>)}
           </nav>
           <div className="footer-info">
             <address>{ADDRESS[0]}<br />{ADDRESS[1]}</address>

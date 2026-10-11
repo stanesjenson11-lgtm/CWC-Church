@@ -151,7 +151,7 @@ a:hover .swap-row + .swap-row span { transform: none; }
   position: relative;
   width: 7.2rem;
   height: 8.4rem;
-  mask: url(/img/logo-mask.png) center / contain no-repeat;
+  -webkit-mask: url(/img/logo-mask.png) center / contain no-repeat; mask: url(/img/logo-mask.png) center / contain no-repeat;
 }
 .veil-shell, .veil-fill { position: absolute; inset: 0; background: var(--ink); }
 .veil-shell { opacity: 0.12; }
@@ -205,7 +205,7 @@ a:hover .swap-row + .swap-row span { transform: none; }
   text-transform: uppercase;
 }
 .brand { display: flex; align-items: center; gap: 0.6rem; justify-self: start; }
-.brand-mark { width: 1.35rem; height: 1.6rem; background: currentColor; mask: url(/img/logo-mask.png) center / contain no-repeat; }
+.brand-mark { width: 1.35rem; height: 1.6rem; background: currentColor; -webkit-mask: url(/img/logo-mask.png) center / contain no-repeat; mask: url(/img/logo-mask.png) center / contain no-repeat; }
 .brand-word { font-stretch: 62%; font-weight: 800; font-size: 1.5rem; line-height: 1; }
 .nav { position: relative; }
 .nav ul { display: flex; gap: clamp(1.5rem, 2.4vw, 2.75rem); }
@@ -262,7 +262,7 @@ main { position: relative; z-index: var(--z-section); }
   perspective: 1800px;
 }
 /* One camera over the 3D book and its flat twin: zooming this moves both, so they never come apart. */
-.camera { position: absolute; inset: 0; transform-origin: 0 0; }
+.camera { position: absolute; inset: 0; z-index: 1; transform-origin: 0 0; pointer-events: none; } /* above the caption: the words sit behind the book */
 .book-tilt, .book { transform-style: preserve-3d; }
 .book { position: relative; width: var(--bw); height: var(--bh); }
 .face { position: absolute; }
@@ -291,7 +291,7 @@ main { position: relative; z-index: var(--z-section); }
 .pageblock { inset: 0.6% 1% 0.6% 0; background: var(--page); overflow: hidden; transform: translateZ(calc(var(--bd) / 2 - 2px)); }
 .cover, .leaf { position: absolute; inset: 0; transform-origin: left center; transform-style: preserve-3d; }
 .leaf { inset: 0.6% 1% 0.6% 0; }
-.cover-front, .cover-back, .leaf-front, .leaf-back { position: absolute; inset: 0; backface-visibility: hidden; }
+.cover-front, .cover-back, .leaf-front, .leaf-back { position: absolute; inset: 0; -webkit-backface-visibility: hidden; backface-visibility: hidden; }
 .cover-back, .leaf-back { transform: rotateY(180deg); }
 .cover-front {
   background:
@@ -337,12 +337,13 @@ main { position: relative; z-index: var(--z-section); }
 }
 .folio-head { display: flex; justify-content: space-between; margin-bottom: 1.1em; padding-bottom: 0.35em; border-bottom: 0.2cqw solid; font-size: 0.8em; letter-spacing: 0.16em; text-transform: uppercase; }
 .folio-cols { columns: 2; column-gap: 6cqw; column-rule: 0.15cqw solid oklch(0.8 0 0); }
-.folio p { margin-bottom: 0.15em; text-align: justify; hyphens: auto; }
+.folio p { margin-bottom: 0.15em; text-align: justify; -webkit-hyphens: auto; hyphens: auto; }
 .folio sup { font-size: 0.6em; line-height: 0; vertical-align: 0.6em; margin-right: 0.2em; font-weight: 500; }
 
 .hero-ui {
   position: absolute;
   inset: 0;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   padding: calc(var(--g) + 4rem) var(--g) var(--g);
@@ -366,6 +367,15 @@ main { position: relative; z-index: var(--z-section); }
 .cap-body { position: absolute; right: var(--g); bottom: calc(var(--g) * 2); max-width: 24rem; font-size: var(--t-lead); line-height: 1.45; text-wrap: pretty; }
 .moving .hero-caption { visibility: visible; }
 
+/* iOS Safari collapses its toolbar mid-pin, and a 100svh section then leaves a strip of page showing beneath it.
+   Pinned sections stand 100lvh tall and lay their content out in the top 100svh, which is on screen in both states. */
+@supports (height: 1lvh) {
+  .hero, .house { height: 100lvh; }
+  .scene, .camera, .hero-ui, .hero-caption, .page-layer { inset: 0 0 auto; height: 100svh; }
+  .page-caption { bottom: auto; top: calc(100svh - var(--g)); translate: 0 -100%; }
+  .house-inside-ui { bottom: calc(100lvh - 100svh + var(--g)); }
+}
+
 /* the flat twin of the right-hand page; JS sizes it and lays it over the 3D page */
 .page-layer { position: absolute; inset: 0; visibility: hidden; pointer-events: none; }
 .page { position: absolute; top: 0; left: 0; width: 1000px; aspect-ratio: 0.7215; background: var(--page); transform-origin: 0 0; --ink-a: 1; }
@@ -383,7 +393,7 @@ main { position: relative; z-index: var(--z-section); }
   transform-origin: left center;
   pointer-events: none;
 }
-.page-caption { visibility: hidden; position: absolute; left: var(--g); bottom: var(--g); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+.page-caption { visibility: hidden; position: absolute; z-index: 2; left: var(--g); bottom: var(--g); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
 
 /* pixel-dissolve seam at the top of a section */
 .dissolve { position: absolute; inset: 0 0 auto; width: 100%; height: 34vh; z-index: 3; pointer-events: none; }
@@ -394,6 +404,7 @@ main { position: relative; z-index: var(--z-section); }
   position: absolute;
   left: 50%;
   top: 50vh;
+  top: 50svh;
   width: min(86vw, 1100px);
   aspect-ratio: 1000 / 520;
   translate: -50% -46%;
@@ -402,7 +413,7 @@ main { position: relative; z-index: var(--z-section); }
 .ark { display: block; width: 100%; height: 100%; overflow: visible; }
 .ark-lines path { stroke: var(--white); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 0; }
 .door-light { fill: var(--white); }
-.house-caption { position: absolute; left: var(--g); top: calc(100vh - var(--g)); translate: 0 -100%; max-width: 44rem; }
+.house-caption { position: absolute; left: var(--g); top: calc(100vh - var(--g)); top: calc(100svh - var(--g)); translate: 0 -100%; max-width: 44rem; }
 .house-caption h2 { font-size: clamp(2.2rem, 4.4vw, 4.6rem); margin-bottom: 1rem; }
 .house-inside { position: absolute; inset: 0; }
 .house-inside img { width: 100%; height: 100%; object-fit: cover; }
@@ -571,6 +582,8 @@ main { position: relative; z-index: var(--z-section); }
 .field-wide { grid-column: 1 / -1; }
 .field label, .field legend { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--grey-dark); }
 .field input, .field select, .field textarea {
+  -webkit-appearance: none;
+  appearance: none;
   width: 100%;
   min-height: 48px;
   padding: 0.6rem 0;
@@ -625,7 +638,6 @@ main { position: relative; z-index: var(--z-section); }
   .masthead { grid-template-columns: 1fr auto; }
 }
 @media (max-width: 1024px) {
-  .panels { display: none; }
   .service-cards { grid-template-columns: 1fr 1fr; }
   .service-cards li:last-child { grid-column: 1 / -1; }
   .rhythm-row { grid-template-columns: 9rem minmax(0, 1fr) auto; }
@@ -635,28 +647,49 @@ main { position: relative; z-index: var(--z-section); }
   .identity { max-width: none; }
   .hero-title { font-size: clamp(2.8rem, 11vw, 5rem); margin-bottom: 1.25rem; }
   .scene { padding-top: 22vh; }
+  .cap-title { top: 18vh; top: 18svh; translate: none; } /* above the book, which is centred here */
+  .min-text { flex-direction: column; align-items: start; gap: 0.75rem; } /* the title gets the panel's full width, so it never breaks mid-word */
   .leader-list { top: auto; bottom: var(--g); }
   .leaders-intro { width: min(22rem, 40%); }
 }
 @media (max-width: 640px) {
-  .hero-foot { grid-template-columns: 1fr; justify-items: center; }
-  .hero-foot .foot-link { display: none; }
+  /* hero: words up top, the book in the lower half, the button at the foot; nothing from the wide layout is dropped */
+  .hero { --bh: min(27vh, 56vw); --bh: min(27svh, 56vw); }
+  .scene { padding-top: 36vh; padding-top: 36svh; }
+  .hero-mid { flex-direction: column; justify-content: flex-start; gap: 1rem; }
+  .hero-title { font-size: min(10vw, 5.4vh); font-size: min(10vw, 5.4svh); margin: 0.6rem 0 0.8rem; }
+  .hero-lead { font-size: clamp(0.85rem, 2.5vh, 1rem); font-size: clamp(0.85rem, 2.5svh, 1rem); }
+  .panels { width: 100%; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+  .panels .bpanel { padding: 0.7rem 0.8rem 0.8rem; }
+  .panels .eyebrow { margin-bottom: 0.45rem; font-size: 0.65rem; }
+  .panels dt, .panels dd { font-size: 0.68rem; }
+  .panel-figure { font-size: 1.5rem; }
+  .panel-note { margin-top: 0.3rem; font-size: 0.62rem; }
+  .hero-foot { grid-template-columns: 1fr 1fr; grid-template-areas: "l r" "c c"; gap: 0.5rem 1rem; }
+  .hero-foot .foot-link { grid-area: l; font-size: 0.65rem; }
+  .hero-foot .foot-link.right { grid-area: r; }
+  .hero-foot .cta { grid-area: c; }
+  .cap-title { top: 20vh; top: 20svh; translate: none; font-size: clamp(2.2rem, 10vw, 2.8rem); }
   .cap-body { left: var(--g); }
+  .min-panel { width: 84vw; height: 64vh; }
+  .min-text { gap: 0.5rem; }
   .life-inner { padding-top: 0; }
   .life-head { position: static; text-align: left; max-width: none; padding: calc(var(--g) + 4rem) var(--g) 2.5rem; }
-  .rail { display: none; }
   .row, .row.side { height: auto; padding: 0 var(--g); margin-bottom: 3rem; }
   .row-plate, .centre .row-plate, .side .row-plate { position: relative; inset: auto; translate: none; width: 86%; aspect-ratio: 710 / 462; }
-  .row:nth-child(even) .row-plate { margin-left: auto; }
+  .centre .row-plate { margin: 0 auto; }
+  .side .row-plate { width: 46%; } /* side photos stay smaller than the four that carry a word */
+  .side.right .row-plate { margin-left: auto; }
+  .row.side { margin-bottom: 2rem; }
   .row-copy { position: static; translate: none; width: auto; margin-top: 0.5rem; font-size: 1rem; }
-  .min-panel { width: 84vw; height: 64vh; }
-  .min-text { flex-direction: column; gap: 0.5rem; }
-  .leaders { height: auto; min-height: 0; padding-bottom: 0; }
-  .leaders-head { position: relative; top: auto; left: auto; padding: calc(var(--g) + 4rem) var(--g) 1.5rem; }
-  .figure { position: relative; left: auto; bottom: auto; translate: none; height: 62vh; margin: 0 auto; }
-  .leader-list { position: relative; inset: auto; width: auto; margin: 0 var(--g) 2rem; }
-  .leaders-intro { position: relative; inset: auto; width: auto; margin: 0 var(--g) 3rem; }
-  .hero { --bh: min(38vh, 62vw); }
+  /* leaders on one screen: title, then the names top-left with the figure beside and behind, intro and button along the bottom */
+  .leaders { height: 100vh; height: 100svh; min-height: 0; display: grid; grid-template-columns: minmax(0, 11rem) 1fr; grid-template-rows: auto minmax(0, 1fr) auto; gap: 0.75rem; padding: calc(var(--g) + 4.5rem) var(--g) var(--g); }
+  .leaders-head { position: static; grid-column: 1 / -1; max-width: none; font-size: clamp(2.2rem, 10.5vw, 3rem); }
+  .leader-list { position: relative; inset: auto; grid-column: 1; grid-row: 2; align-self: start; width: auto; padding: 0.5rem 0.6rem 0.6rem; } /* relative, not static: it keeps its z-index above the figure */
+  .leader-list button { padding: 0.45rem 0; font-size: 0.7rem; }
+  .figure { position: relative; grid-column: 1 / -1; grid-row: 2; inset: auto; translate: none; justify-self: end; align-self: end; height: 100%; width: auto; max-width: 78vw; aspect-ratio: 0.82; } /* as tall as the row allows; the cap keeps the head clear of the names */
+  .leaders-intro { position: static; grid-column: 1 / -1; grid-row: 3; width: auto; gap: 0.75rem; justify-items: stretch; }
+  .leaders-intro .lead { font-size: clamp(0.85rem, 2.4vh, 1rem); font-size: clamp(0.85rem, 2.4svh, 1rem); max-width: none; }
   .page-hero { padding-top: calc(var(--g) + 6rem); }
   /* minmax(0, 1fr): a long unbroken word (the Tamil greeting) must not widen the column past the screen */
   .services-head, .story-body, .sermon-now, .connect-card-inner, .lang-hero { grid-template-columns: minmax(0, 1fr); }
@@ -664,22 +697,32 @@ main { position: relative; z-index: var(--z-section); }
   .lang-greeting { font-size: clamp(2.2rem, 10vw, 3.4rem); overflow-wrap: anywhere; }
   .script-tamil { font-size: clamp(1.8rem, 8.4vw, 3rem); }
   .script-english { font-size: clamp(3rem, 16vw, 4.5rem); }
-  .service-cards { grid-template-columns: 1fr; gap: 3rem; }
-  .service-plate { aspect-ratio: 4 / 3; }
+  /* three services on one screen, as on wide screens: each card runs photo | words */
+  .service-cards { grid-template-columns: 1fr; gap: 1.5rem; }
+  .service-cards li:last-child { grid-column: auto; }
+  .service-card { grid-template-columns: 38% minmax(0, 1fr); grid-template-rows: auto auto 1fr; gap: 0.4rem 1rem; align-items: start; }
+  .service-plate { grid-row: 1 / -1; aspect-ratio: 4 / 5; }
+  .service-greeting { font-size: clamp(1.25rem, 5.4vw, 1.6rem); }
+  .service-meta { flex-direction: column; gap: 0.15rem; padding-top: 0.5rem; font-size: 0.72rem; }
+  .service-go { align-self: end; font-size: 0.72rem; }
+  .sermon-grid { grid-template-columns: 1fr 1fr; gap: 1.5rem 0.75rem; margin-top: 2.5rem; }
+  .sermon-card { gap: 0.4rem; }
+  .sermon-card-meta { font-size: 0.65rem; }
+  .sermon-card-title { font-size: 0.85rem; }
   .rhythm-row { grid-template-columns: 1fr; gap: 0.4rem; padding: 1.5rem 0; }
+  .rhythm-detail { grid-column: auto; }
   .rhythm-row .text-link { justify-self: start; }
   .cta { width: 100%; }
   .card-form { grid-template-columns: 1fr; }
   .card-actions .cta { width: 100%; }
-  .min-text { align-items: start; }
   .lang-hero { min-height: 0; padding-top: calc(var(--g) + 6rem); }
   .lang-plate { order: -1; }
   .lang-plate .plate { aspect-ratio: 4 / 3; }
   .lang-more { flex-direction: column; align-items: start; }
   .footer-panel { display: flex; flex-direction: column; justify-content: space-between; gap: 1.5rem; padding: 5rem var(--g) var(--g); }
   .footer-head, .footer-nav, .footer-info, .footer-row { position: relative; inset: auto; translate: none; text-align: left; }
-  .footer-row { grid-template-columns: 1fr; justify-items: start; }
-  .socials { justify-self: start; }
+  .footer-row { grid-template-columns: minmax(0, 1fr); justify-items: start; }
+  .socials { justify-self: start; flex-wrap: wrap; gap: 0.75rem 1.5rem; }
 }
 
 /* ---------- reduced motion: everything readable, nothing pinned ---------- */

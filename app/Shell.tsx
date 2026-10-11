@@ -168,6 +168,11 @@ export default function Shell({ children }: { children: React.ReactNode }) {
         off.push(hold, () => events.forEach(([t, f]) => list.removeEventListener(t, f)));
       }
 
+      /* back from another tab or app through the back-forward cache: re-measure the pins (a size change GSAP handles itself) */
+      const back = (e: PageTransitionEvent) => e.persisted && ScrollTrigger.refresh();
+      window.addEventListener('pageshow', back);
+      off.push(() => window.removeEventListener('pageshow', back));
+
       visit.firstLoad = false;
       requestAnimationFrame(() => ScrollTrigger.refresh());
       return () => off.forEach((f) => f());

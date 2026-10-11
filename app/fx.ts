@@ -1,6 +1,6 @@
 // Canvas effects, kept out of the React tree: plain functions over a <canvas>.
 
-const dprOf = () => Math.min(window.devicePixelRatio || 1, 2);
+const dprOf = () => Math.min(window.devicePixelRatio || 1, innerWidth < 768 ? 1.5 : 2); // phones redraw these often; 1.5x is plenty for hairlines
 
 /** Size a canvas's backing store to its CSS box. Returns the CSS size. */
 function fit(canvas: HTMLCanvasElement) {
