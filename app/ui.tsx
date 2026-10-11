@@ -56,9 +56,14 @@ export const CTA = ({ href, label, solid, cursor }: { href: string; label: strin
 };
 export { CtaFrame };
 
-export const Plate = ({ name, alt, sizes = '(max-width: 900px) 90vw, 50vw', className = '' }: { name: string; alt: string; sizes?: string; className?: string }) => (
+/** `cutout` lays `{name}-cut` (just the people) over the photo, so `children` sit behind the people but in front of the room. */
+export const Plate = ({ name, alt, sizes = '(max-width: 900px) 90vw, 50vw', className = '', cutout, children }: { name: string; alt: string; sizes?: string; className?: string; cutout?: boolean; children?: React.ReactNode }) => (
   <div className={`plate ${className}`}>
-    <div className="plate-fill"><img src={photo(name).src} srcSet={photo(name).srcSet} sizes={sizes} alt={alt} loading="lazy" decoding="async" /></div>
+    <div className="plate-fill">
+      <img src={photo(name).src} srcSet={photo(name).srcSet} sizes={sizes} alt={alt} loading="lazy" decoding="async" />
+      {children}
+      {cutout && <img className="plate-cut" src={photo(`${name}-cut`).src} srcSet={photo(`${name}-cut`).srcSet} sizes={sizes} alt="" loading="lazy" decoding="async" />}
+    </div>
     <svg className="plate-line" viewBox="0 0 1 1" preserveAspectRatio="none" aria-hidden="true"><path d={PLATE_CLIP} /></svg>
   </div>
 );

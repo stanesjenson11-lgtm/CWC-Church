@@ -34,8 +34,12 @@ export default function About() {
           {VALUES.map((v, i) => (
             <Fragment key={v.word}>
               <div className="row centre">
-                <div className="row-plate"><Plate name={v.img} alt={`${v.word} at Compassion Worship Center`} /></div>
-                <p className="row-word display" data-letters>{v.word}</p>
+                <div className="row-plate">
+                  {/* The word stands in the room, behind the people in the photo. */}
+                  <Plate name={v.img} alt={`${v.word} at Compassion Worship Center`} cutout>
+                    <p className="row-word display" data-letters style={{ top: v.wordAt }}>{v.word}</p>
+                  </Plate>
+                </div>
                 <p className="row-copy">{v.copy}</p>
               </div>
               {SIDE_PHOTOS[i] && (
